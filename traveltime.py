@@ -13,8 +13,29 @@ call = 'origins='+home+'&destinations='+destinations
 r = requests.get(baseURL+call)
 resp = json.loads(r.text)
 
-print(json.dumps(resp, indent=1))
-for location in resp["rows"][0]["elements"]:
-    print(location["duration"]["text"])
+mapjs = 'var heatMapData = \n'
+mapitem = '  {{location: new google.maps.LatLng({latlon}), weight: {weight}}}'
+mapjsBot = '''
+];
 
-#print(json.dumps(json.loads(r.text)['match'], indent=1))
+var pindrop = new google.maps.LatLng({lat}, {lon});
+
+map = new google.maps.Map(document.getElementById('map'), {{
+  center: pindrop,
+  zoom: 13,
+  mapTypeId: google.maps.MapTypeId.SATELLITE
+}});
+
+var heatmap = new google.maps.visualization.HeatmapLayer({{
+  data: heatMapData
+}});
+heatmap.setMap(map);
+'''.format(lat=lat, lon=lon)
+
+mapjs += ',\n'.join([mapitem.format(latlon=dests[index],
+                   weight=resp["rows"][0]["elements"][index]["duration"]["value"]) for index in xrange(len(resp["rows"][0]["elements"]))])
+# for index in xrange(len(resp["rows"][0]["elements"])):
+#     mapjs += mapitem.format(latlon=dests[index], weight=resp["rows"][0]["elements"][index]["duration"]["value"])
+mapjs += mapjsBot
+
+print(mapjs)
